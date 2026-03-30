@@ -24,6 +24,10 @@ export function TaskManagement() {
     const unsub = onSnapshot(qTask, (snap) => {
       const data: Task[] = [];
       snap.forEach(d => data.push({id: d.id, ...d.data()} as Task));
+      
+      // Sắp xếp thông minh (A-Z, 1-9) theo providerName
+      data.sort((a, b) => a.providerName.localeCompare(b.providerName, undefined, { numeric: true, sensitivity: 'base' }));
+      
       setTasks(data);
       setLoading(false);
     });
