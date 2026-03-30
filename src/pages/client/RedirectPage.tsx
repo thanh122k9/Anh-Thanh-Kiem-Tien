@@ -51,12 +51,32 @@ export function RedirectPage() {
           setCountdown((prev) => {
             if (prev <= 1) {
               clearInterval(timer);
-              // Append sessionToken to URL. Different providers use different params. We'll use ?custom= for generic 
-              // Usually the original URL is constructed from provider dashboard. If originalUrl already contains ?, we append using &
-              const sep = taskData.originalUrl.includes('?') ? '&' : '?';
-              const finalUrl = `${taskData.originalUrl}${sep}custom=${sessionToken}`;
               
-              // Open in current tab to prevent pop-up blocker issues, or new tab based on preference.
+              const baseUrl = window.location.origin;
+              const verificationUrl = `${baseUrl}/dashboard?completed_token=${sessionToken}`;
+              const encodedVerifyUrl = encodeURIComponent(verificationUrl);
+
+              let finalUrl = taskData.originalUrl;
+              
+              if (finalUrl.includes('url=')) {
+                // Handle API style: append encoded verification URL to the url= parameter
+                if (finalUrl.endsWith('url=')) {
+                  finalUrl += encodedVerifyUrl;
+                } else if (finalUrl.includes('url=&')) {
+                    finalUrl = finalUrl.replace('url=&', `url=${encodedVerifyUrl}&`);
+                } else {
+                    // Generic fallback if url= is somewhere in the middle but empty
+                    finalUrl = finalUrl.replace(/url=([^&]*)/, `url=${encodedVerifyUrl}`);
+                }
+                
+                // Also append alias/custom for Webhook support if the provider supports it
+                finalUrl += `&alias=${sessionToken}&custom=${sessionToken}`;
+              } else {
+                // Standard direct link: append as query param
+                const sep = finalUrl.includes('?') ? '&' : '?';
+                finalUrl = `${finalUrl}${sep}custom=${sessionToken}`;
+              }
+              
               window.location.href = finalUrl;
               return 0;
             }
