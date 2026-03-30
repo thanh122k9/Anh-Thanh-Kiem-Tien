@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { CheckCircle2, ChevronRight, Clock } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Clock, PlayCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Task } from '../types';
 
 interface TaskCardProps {
   task: Task;
   onStart: (task: Task) => void;
-  isCompleted: boolean;
+  status: 'completed' | 'pending' | 'none';
 }
 
-export function TaskCard({ task, onStart, isCompleted }: TaskCardProps) {
+export function TaskCard({ task, onStart, status }: TaskCardProps) {
   const [cooldown, setCooldown] = useState(0);
 
   const difficultyColors = {
@@ -54,11 +54,22 @@ export function TaskCard({ task, onStart, isCompleted }: TaskCardProps) {
           <span className="text-2xl font-black text-orange-500">+{task.rewardAmount} <span className="text-sm font-normal text-white/60">VNĐ</span></span>
         </div>
         
-        {isCompleted ? (
+        {status === 'completed' ? (
           <div className="flex items-center gap-2 rounded-full bg-green-500/20 px-4 py-2 text-sm font-bold text-green-400">
             <CheckCircle2 className="h-4 w-4" />
             Hoàn thành
           </div>
+        ) : status === 'pending' ? (
+          <button 
+            onClick={handleStart}
+            disabled={cooldown > 0}
+            className={cn(
+              "flex items-center gap-2 rounded-full px-6 py-2 text-sm font-bold bg-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-white transition-all transform active:scale-95"
+            )}
+          >
+            <PlayCircle className="h-4 w-4" />
+            Đang làm
+          </button>
         ) : (
           <button 
             onClick={handleStart}

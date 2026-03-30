@@ -24,6 +24,7 @@ export function Dashboard() {
   const { user, profile } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
+  const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
   const [searchParams, setSearchParams] = useSearchParams();
   const [showToast, setShowToast] = useState(false);
   const navigate = useNavigate();
@@ -113,20 +114,28 @@ export function Dashboard() {
   useEffect(() => {
     if (!user) return;
     
-    // Listen for completed tasks today to mark as done
+    // Listen for both completed and pending tasks today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const logsQuery = query(
       collection(db, 'task_logs'),
       where('userId', '==', user.uid),
-      where('status', '==', 'completed'),
-      where('completedAt', '>=', today)
+      where('createdAt', '>=', today)
     );
     
     const unsubscribe = onSnapshot(logsQuery, (snapshot) => {
       const completed = new Set<string>();
-      snapshot.forEach(doc => completed.add(doc.data().taskId));
+      const pending = new Set<string>();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.status === 'completed') {
+          completed.add(data.taskId);
+        } else if (data.status === 'pending') {
+          pending.add(data.taskId);
+        }
+      });
       setCompletedTaskIds(completed);
+      setPendingTaskIds(pending);
     });
 
     return () => unsubscribe();
@@ -221,7 +230,10 @@ export function Dashboard() {
                 key={task.id} 
                 task={task} 
                 onStart={handleStartTask}
-                isCompleted={completedTaskIds.has(task.id)}
+                status={
+                  completedTaskIds.has(task.id) ? 'completed' : 
+                  pendingTaskIds.has(task.id) ? 'pending' : 'none'
+                }
               />
             ))}
           </div>
