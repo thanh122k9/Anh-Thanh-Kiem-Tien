@@ -37,9 +37,11 @@ export function Dashboard() {
       const verifyTask = async () => {
         try {
           // Small delay to ensure DB sync
-          await new Promise(r => setTimeout(r, 1500));
+          console.log("Xác thực: Bắt đầu xác thực token:", token);
+          await new Promise(r => setTimeout(r, 2000));
 
           // 1. Find the pending log
+          console.log("Xác thực: Bước 1 - Tìm phiên làm việc (Log)...");
           const logsQuery = query(
             collection(db, 'task_logs'), 
             where('userId', '==', user.uid),
@@ -50,26 +52,34 @@ export function Dashboard() {
           
           const logSnap = await getDocs(logsQuery);
           if (logSnap.empty) {
-            console.log("Không tìm thấy log pending hoặc đã hoàn thành.");
+            console.log("Xác thực: Không tìm thấy log pending.");
+            setShowToast(false);
             return;
           }
 
           const logDoc = logSnap.docs[0];
           const logData = logDoc.data() as TaskLog;
+          console.log("Xác thực: Đã tìm thấy LogID:", logDoc.id);
 
           // 2. Fetch Reward info
+          console.log("Xác thực: Bước 2 - Lấy thông tin giá trị phần thưởng...");
           const taskRef = doc(db, 'tasks', logData.taskId);
           const taskSnap = await getDoc(taskRef);
-          if (!taskSnap.exists()) return;
+          if (!taskSnap.exists()) {
+              console.log("Xác thực: Không tìm thấy Task tương ứng.");
+              return;
+          }
           const taskData = taskSnap.data() as Task;
 
           // 3. Update Log status
+          console.log("Xác thực: Bước 3 - Đánh dấu hoàn thành nhiệm vụ...");
           await updateDoc(logDoc.ref, {
             status: 'completed',
             completedAt: serverTimestamp()
           });
 
           // 4. Update User Balance & Stats
+          console.log("Xác thực: Bước 4 - Cộng tiền vào tài khoản người dùng...");
           const userRef = doc(db, 'users', user.uid);
           await updateDoc(userRef, {
             balance: increment(taskData.rewardAmount),
@@ -77,12 +87,12 @@ export function Dashboard() {
             totalCompleted: increment(1)
           });
           
-          // Trigger a success message via alert or better UI
-          alert(`Thành công! Bạn nhận được ${taskData.rewardAmount}đ`);
+          console.log("Xác thực: Hoàn tất tất cả các bước thành công!");
+          alert(`Chúc mừng! Bạn đã hoàn thành nhiệm vụ và nhận được ${taskData.rewardAmount}đ`);
 
         } catch (err: any) {
           console.error("Lỗi xác thực:", err);
-          alert("Có lỗi xảy ra khi xác thực: " + err.message);
+          alert(`Lỗi xác thực [Code: ${err.code || 'N/A'}]: ${err.message}`);
         } finally {
           setShowToast(false);
           // Clean up URL
@@ -94,7 +104,7 @@ export function Dashboard() {
 
       verifyTask();
       
-      const timer = setTimeout(() => setShowToast(false), 15000);
+      const timer = setTimeout(() => setShowToast(false), 20000);
       return () => clearTimeout(timer);
     }
   }, [searchParams, setSearchParams, user]);
@@ -194,6 +204,7 @@ export function Dashboard() {
 
       {/* Stats Grid */}
       <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
+        {/* ... stats widgets unchanged ... */}
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/20 text-blue-500">
             <ShieldCheck className="h-6 w-6" />
@@ -220,7 +231,7 @@ export function Dashboard() {
       {/* Task Section */}
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Nhiệm vụ khả dụng</h2>
+          <h2 className="text-2xl font-bold">Nhiệm vụ khả dụng {profile?.displayName && `- Chào ${profile.displayName}!`}</h2>
         </div>
 
         {tasks.length > 0 ? (
@@ -247,7 +258,8 @@ export function Dashboard() {
 
       {/* Anti-Cheat Info */}
       <div className="mt-20 rounded-3xl bg-orange-500/10 p-8 md:p-12">
-        <div className="flex flex-col items-center gap-8 lg:flex-row">
+         {/* ... (Unchanged content) */}
+         <div className="flex flex-col items-center gap-8 lg:flex-row">
           <div className="flex-1">
             <div className="mb-4 flex items-center gap-2 text-orange-500">
               <Info className="h-5 w-5" />
