@@ -85,8 +85,8 @@ export function RedirectPage() {
         }, 1000);
 
       } catch (err: any) {
-        console.error(err);
-        setError('Có lỗi xảy ra khi tạo link: ' + err.message);
+        console.error("Lỗi chuyển hướng:", err);
+        setError(`Lỗi khởi tạo link: ${err.message} (Mã: ${err.code || 'N/A'})`);
       }
     };
 

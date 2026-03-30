@@ -4,9 +4,6 @@ service cloud.firestore {
     function isAuthenticated() {
       return request.auth != null;
     }
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
     function isAdmin() {
       return isAuthenticated() && 
         (request.auth.token.email == "acc.xinh001@gmail.com" ||
@@ -15,9 +12,8 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isAuthenticated() && request.auth.uid == userId;
-      allow read, update: if isAdmin();
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      allow read, write: if isAdmin();
     }
 
     match /tasks/{taskId} {
@@ -26,11 +22,11 @@ service cloud.firestore {
     }
 
     match /task_logs/{logId} {
-      allow read, create, update: if isAuthenticated();
+      allow read, write: if isAuthenticated();
     }
 
     match /withdrawals/{reqId} {
-      allow read, create: if isAuthenticated();
+      allow read, write: if isAuthenticated();
       allow update: if isAdmin();
     }
   }
