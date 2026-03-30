@@ -116,6 +116,10 @@ export function Dashboard() {
     const unsubscribe = onSnapshot(tasksQuery, (snapshot) => {
       const taskList: Task[] = [];
       snapshot.forEach(doc => taskList.push({ id: doc.id, ...doc.data() } as Task));
+      
+      // Sort alphabetically by instructions
+      taskList.sort((a, b) => a.instructions.localeCompare(b.instructions));
+      
       setTasks(taskList);
     });
 
