@@ -210,7 +210,7 @@ export function Dashboard() {
       {/* Task Section */}
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Nhiệm vụ khả dụng {profile?.displayName && `<br> Chào ${profile.displayName}!`}</h2>
+          <h2 className="text-2xl font-bold">Nhiệm vụ khả dụng {profile?.displayName &&` - Chào ${profile.displayName}!`}</h2>
         </div>
 
         {tasks.length > 0 ? (
