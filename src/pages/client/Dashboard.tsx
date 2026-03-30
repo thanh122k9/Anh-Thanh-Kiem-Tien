@@ -59,6 +59,7 @@ export function Dashboard() {
 
           const logDoc = logSnap.docs[0];
           const logData = logDoc.data() as TaskLog;
+          console.log("Xác thực: UID Log:", logData.userId, "UID Của Bạn:", user.uid);
           console.log("Xác thực: Đã tìm thấy LogID:", logDoc.id);
 
           // 2. Fetch Reward info
