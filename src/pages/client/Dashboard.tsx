@@ -203,32 +203,6 @@ export function Dashboard() {
         </motion.p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
-        {/* ... stats widgets unchanged ... */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/20 text-blue-500">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
-          <h3 className="text-lg font-bold">Bảo mật Anti-Cheat</h3>
-          <p className="mt-2 text-xs md:text-sm text-white/40">Kiểm tra tỷ lệ hoàn thành, chặn IP spam tự động bằng thuật toán bảo mật.</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/20 text-purple-500">
-            <Trophy className="h-6 w-6" />
-          </div>
-          <h3 className="text-lg font-bold">Hệ thống Cấp độ</h3>
-          <p className="mt-2 text-xs md:text-sm text-white/40">Hoàn thành nhiều, cấp càng cao. Cấp độ cao hơn sẽ giúp nhận thưởng tốt hơn (Sắp ra mắt).</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/20 text-green-500">
-            <CheckCircle2 className="h-6 w-6" />
-          </div>
-          <h3 className="text-lg font-bold">Xác thực Real-time</h3>
-          <p className="mt-2 text-xs md:text-sm text-white/40">Cập nhật kết quả tiền thưởng trực tiếp không cần tải lại trang bằng công nghệ Webhook.</p>
-        </div>
-      </div>
-
       {/* Task Section */}
       <div className="space-y-8">
         <div className="flex items-center justify-between">
