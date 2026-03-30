@@ -41,6 +41,7 @@ export function Dashboard() {
           // 1. Find the pending log
           const logsQuery = query(
             collection(db, 'task_logs'), 
+            where('userId', '==', user.uid),
             where('sessionToken', '==', token),
             where('status', '==', 'pending'),
             limit(1)
