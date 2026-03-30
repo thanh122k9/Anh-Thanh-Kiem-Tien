@@ -33,7 +33,7 @@ export function TaskManagement() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (isEditing) {
+      if (isEditing && isEditing.id !== 'new') {
         await updateDoc(doc(db, 'tasks', isEditing.id), formData);
       } else {
         await addDoc(collection(db, 'tasks'), formData);
