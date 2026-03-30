@@ -42,9 +42,9 @@ export function TaskManagement() {
       setFormData({
         providerName: '', originalUrl: '', rewardAmount: 500, difficulty: 'easy', instructions: '', status: true
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Lỗi lưu Task');
+      alert(`Lỗi lưu Task: ${err.message || 'Lỗi không xác định'}`);
     }
   };
 
