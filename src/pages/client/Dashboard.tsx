@@ -11,7 +11,8 @@ import {
   updateDoc, 
   increment, 
   serverTimestamp, 
-  limit 
+  limit,
+  runTransaction 
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Task, TaskLog } from '../../types';
@@ -59,37 +60,41 @@ export function Dashboard() {
 
           const logDoc = logSnap.docs[0];
           const logData = logDoc.data() as TaskLog;
+          
           console.log("Xác thực: UID Log:", logData.userId, "UID Của Bạn:", user.uid);
           console.log("Xác thực: Đã tìm thấy LogID:", logDoc.id);
 
-          // 2. Fetch Reward info
-          console.log("Xác thực: Bước 2 - Lấy thông tin giá trị phần thưởng...");
+          // 2. Prepare refs
           const taskRef = doc(db, 'tasks', logData.taskId);
-          const taskSnap = await getDoc(taskRef);
-          if (!taskSnap.exists()) {
-              console.log("Xác thực: Không tìm thấy Task tương ứng.");
-              return;
-          }
-          const taskData = taskSnap.data() as Task;
-
-          // 3. Update Log status
-          console.log("Xác thực: Bước 3 - Đánh dấu hoàn thành nhiệm vụ...");
-          await updateDoc(logDoc.ref, {
-            status: 'completed',
-            completedAt: serverTimestamp()
-          });
-
-          // 4. Update User Balance & Stats
-          console.log("Xác thực: Bước 4 - Cộng tiền vào tài khoản người dùng...");
           const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, {
-            balance: increment(taskData.rewardAmount),
-            exp: increment(10),
-            totalCompleted: increment(1)
+
+          // 3. Perform Atomic Transaction
+          console.log("Xác thực: Đang thực hiện giao dịch ghi dữ liệu hợp nhất...");
+          await runTransaction(db, async (transaction) => {
+            const taskSnap = await transaction.get(taskRef);
+            if (!taskSnap.exists()) throw new Error("Nhiệm vụ không tồn tại!");
+            
+            const taskData = taskSnap.data() as Task;
+
+            // Update Log
+            transaction.update(logDoc.ref, {
+              status: 'completed',
+              completedAt: serverTimestamp()
+            });
+
+            // Update User Balance
+            transaction.update(userRef, {
+              balance: increment(taskData.rewardAmount),
+              exp: increment(10),
+              totalCompleted: increment(1)
+            });
+
+            return taskData.rewardAmount;
           });
           
           console.log("Xác thực: Hoàn tất tất cả các bước thành công!");
-          alert(`Chúc mừng! Bạn đã hoàn thành nhiệm vụ và nhận được ${taskData.rewardAmount}đ`);
+          // Since transaction succeeded, we can show success message
+          alert(`Chúc mừng! Bạn đã hoàn thành nhiệm vụ thành công.`);
 
         } catch (err: any) {
           console.error("Lỗi xác thực:", err);
