@@ -35,6 +35,9 @@ export function Dashboard() {
 
       const verifyTask = async () => {
         try {
+          // Small delay to ensure DB sync
+          await new Promise(r => setTimeout(r, 1500));
+
           // 1. Find the pending log
           const logsQuery = query(
             collection(db, 'task_logs'), 
@@ -44,7 +47,10 @@ export function Dashboard() {
           );
           
           const logSnap = await getDocs(logsQuery);
-          if (logSnap.empty) return;
+          if (logSnap.empty) {
+            console.log("Không tìm thấy log pending hoặc đã hoàn thành.");
+            return;
+          }
 
           const logDoc = logSnap.docs[0];
           const logData = logDoc.data() as TaskLog;
@@ -68,12 +74,15 @@ export function Dashboard() {
             exp: increment(10),
             totalCompleted: increment(1)
           });
+          
+          // Trigger a success message via alert or better UI
+          alert(`Thành công! Bạn nhận được ${taskData.rewardAmount}đ`);
 
-          // 5. Success Toast or Message
-          console.log("Xác thực nhiệm vụ thành công!");
-        } catch (err) {
+        } catch (err: any) {
           console.error("Lỗi xác thực:", err);
+          alert("Có lỗi xảy ra khi xác thực: " + err.message);
         } finally {
+          setShowToast(false);
           // Clean up URL
           const newParams = new URLSearchParams(searchParams);
           newParams.delete('completed_token');
@@ -83,7 +92,7 @@ export function Dashboard() {
 
       verifyTask();
       
-      const timer = setTimeout(() => setShowToast(false), 8000);
+      const timer = setTimeout(() => setShowToast(false), 15000);
       return () => clearTimeout(timer);
     }
   }, [searchParams, setSearchParams, user]);
