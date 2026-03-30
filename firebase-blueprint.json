@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account information and earnings.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "balance": { "type": "number", "description": "Current balance in VNĐ" },
+        "level": { "type": "integer", "description": "User level" },
+        "exp": { "type": "integer", "description": "Experience points" },
+        "totalCompleted": { "type": "integer", "description": "Total tasks completed" },
+        "lastActive": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "balance", "level", "exp"]
+    },
+    "Task": {
+      "title": "Shortlink Task",
+      "description": "Available shortlink tasks for users.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "providerName": { "type": "string" },
+        "originalUrl": { "type": "string" },
+        "rewardAmount": { "type": "number" },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+        "status": { "type": "boolean" },
+        "instructions": { "type": "string" }
+      },
+      "required": ["id", "providerName", "originalUrl", "rewardAmount", "difficulty"]
+    },
+    "TaskLog": {
+      "title": "Task Log",
+      "description": "Record of user task attempts and completions.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "taskId": { "type": "string" },
+        "sessionToken": { "type": "string" },
+        "ip": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "expired"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "taskId", "sessionToken", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles."
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Available tasks."
+    },
+    "/task_logs/{logId}": {
+      "schema": "TaskLog",
+      "description": "Logs of task attempts."
+    }
+  }
+}
