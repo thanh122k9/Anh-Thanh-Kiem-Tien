@@ -1,18 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { query, collection, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Task } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { TaskCard } from '../../components/TaskCard';
-import { ShieldCheck, Trophy, CheckCircle2, AlertCircle, Info, Zap } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ShieldCheck, Trophy, CheckCircle2, AlertCircle, Info, Zap, X, Loader2 } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export function Dashboard() {
   const { user, profile } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showToast, setShowToast] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = searchParams.get('completed_token');
+    if (token) {
+      setShowToast(true);
+      // Clean up the URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('completed_token');
+      setSearchParams(newParams, { replace: true });
+      
+      // Auto hide after 8 seconds
+      const timer = setTimeout(() => setShowToast(false), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     // Listen for active tasks
@@ -49,12 +66,37 @@ export function Dashboard() {
   }, [user]);
 
   const handleStartTask = (task: Task) => {
-    // Chuyển hướng sang trang Redirect với ID task, trang redirect sẽ lo việc tạo log chống spam
     navigate(`/redirect/${task.id}`);
   };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 md:py-12">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 20, x: '-50%' }}
+            className="fixed bottom-8 left-1/2 z-[100] flex w-[90%] max-w-md items-center gap-4 rounded-2xl border border-orange-500/50 bg-black/90 p-4 shadow-2xl shadow-orange-500/20 backdrop-blur-xl md:w-full"
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-500/20 text-orange-500">
+               <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+            <div className="flex-1">
+               <h4 className="text-sm font-bold text-white">Nhiệm vụ đang xác thực</h4>
+               <p className="text-xs text-white/60">Hệ thống đang kiểm tra kết quả từ nhà cung cấp. Tiền sẽ được cộng tự động sau vài giây.</p>
+            </div>
+            <button 
+              onClick={() => setShowToast(false)}
+              className="p-1 text-white/20 hover:text-white transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Hero Section */}
       <div className="mb-12 md:mb-16 text-center">
         <motion.h1 
