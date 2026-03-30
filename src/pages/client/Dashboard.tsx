@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { query, collection, where, onSnapshot } from 'firebase/firestore';
+import { 
+  query, 
+  collection, 
+  where, 
+  onSnapshot, 
+  getDocs, 
+  getDoc, 
+  doc, 
+  updateDoc, 
+  increment, 
+  serverTimestamp, 
+  limit 
+} from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Task } from '../../types';
+import { Task, TaskLog } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { TaskCard } from '../../components/TaskCard';
 import { ShieldCheck, Trophy, CheckCircle2, AlertCircle, Info, Zap, X, Loader2 } from 'lucide-react';
@@ -18,18 +30,63 @@ export function Dashboard() {
 
   useEffect(() => {
     const token = searchParams.get('completed_token');
-    if (token) {
+    if (token && user) {
       setShowToast(true);
-      // Clean up the URL
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete('completed_token');
-      setSearchParams(newParams, { replace: true });
+
+      const verifyTask = async () => {
+        try {
+          // 1. Find the pending log
+          const logsQuery = query(
+            collection(db, 'task_logs'), 
+            where('sessionToken', '==', token),
+            where('status', '==', 'pending'),
+            limit(1)
+          );
+          
+          const logSnap = await getDocs(logsQuery);
+          if (logSnap.empty) return;
+
+          const logDoc = logSnap.docs[0];
+          const logData = logDoc.data() as TaskLog;
+
+          // 2. Fetch Reward info
+          const taskRef = doc(db, 'tasks', logData.taskId);
+          const taskSnap = await getDoc(taskRef);
+          if (!taskSnap.exists()) return;
+          const taskData = taskSnap.data() as Task;
+
+          // 3. Update Log status
+          await updateDoc(logDoc.ref, {
+            status: 'completed',
+            completedAt: serverTimestamp()
+          });
+
+          // 4. Update User Balance & Stats
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, {
+            balance: increment(taskData.rewardAmount),
+            exp: increment(10),
+            totalCompleted: increment(1)
+          });
+
+          // 5. Success Toast or Message
+          console.log("Xác thực nhiệm vụ thành công!");
+        } catch (err) {
+          console.error("Lỗi xác thực:", err);
+        } finally {
+          // Clean up URL
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete('completed_token');
+          setSearchParams(newParams, { replace: true });
+        }
+      };
+
+      verifyTask();
       
-      // Auto hide after 8 seconds
       const timer = setTimeout(() => setShowToast(false), 8000);
       return () => clearTimeout(timer);
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, user]);
 
   useEffect(() => {
     // Listen for active tasks
