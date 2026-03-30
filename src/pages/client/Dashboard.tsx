@@ -122,8 +122,8 @@ export function Dashboard() {
       const taskList: Task[] = [];
       snapshot.forEach(doc => taskList.push({ id: doc.id, ...doc.data() } as Task));
       
-      // Sort alphabetically and numerically by instructions (A-Z, 1-9)
-      taskList.sort((a, b) => a.instructions.localeCompare(b.instructions, undefined, { numeric: true, sensitivity: 'base' }));
+      // Sort alphabetically and numerically by providerName (A-Z, 1-9)
+      taskList.sort((a, b) => a.providerName.localeCompare(b.providerName, undefined, { numeric: true, sensitivity: 'base' }));
       
       setTasks(taskList);
     });
