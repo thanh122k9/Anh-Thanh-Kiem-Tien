@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, runTransaction, doc, increment } from 'firebase/firestore';
 import { motion } from 'motion/react';
 import { Wallet, CreditCard, Landmark, AlertCircle, CheckCircle2 } from 'lucide-react';
 
@@ -37,18 +37,34 @@ export function Withdraw() {
 
     setLoading(true);
     try {
-      await addDoc(collection(db, 'withdrawals'), {
-        userId: user.uid,
-        amount: numAmount,
-        paymentMethod: method,
-        paymentDetails: details,
-        status: 'pending',
-        createdAt: serverTimestamp()
+      const userRef = doc(db, 'users', user.uid);
+      const withdrawalRef = collection(db, 'withdrawals');
+
+      await runTransaction(db, async (transaction) => {
+        const userSnap = await transaction.get(userRef);
+        if (!userSnap.exists()) throw new Error("Người dùng không tồn tại!");
+        
+        const userData = userSnap.data();
+        if (userData.balance < numAmount) {
+          throw new Error("Số dư không đủ!");
+        }
+
+        // 1. Create withdrawal doc (Inside transaction we use transaction.set with doc() ref)
+        const newWithdrawalRef = doc(withdrawalRef);
+        transaction.set(newWithdrawalRef, {
+          userId: user.uid,
+          amount: numAmount,
+          paymentMethod: method,
+          paymentDetails: details,
+          status: 'pending',
+          createdAt: serverTimestamp()
+        });
+
+        // 2. Deduct balance immediately
+        transaction.update(userRef, {
+          balance: increment(-numAmount)
+        });
       });
-      
-      // Note: Trừ tiền balance ở đây sẽ cần rule db chặt chẽ. Ở đây ta ưu tiên dùng Cloud Function hoặc duyệt tay r mới trừ để an toàn.
-      // Dựa trên yêu cầu, khi yêu cầu rút tiền thành công, min pay là 10k đ, user tạo ticket => Admin duyệt mới trừ tiền, hoặc trừ tiền pending ngay lập tức(sử dụng cloud functions transaction). 
-      // Tạm thời hiển thị success cho ticket thành công.
 
       setSuccess(true);
       setAmount('');

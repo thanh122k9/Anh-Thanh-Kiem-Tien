@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, increment, runTransaction } from 'firebase/firestore';
 import { Withdrawal, UserProfile } from '../../types';
 import { Check, X, CreditCard, Banknote, Wallet, ExternalLink } from 'lucide-react';
 
@@ -26,45 +26,36 @@ export function WithdrawalReview() {
   }, []);
 
   const handleAction = async (withdrawal: Withdrawal, action: 'paid' | 'rejected') => {
-    if (!window.confirm(`Xác nhận ${action === 'paid' ? 'ĐÃ THANH TOÁN' : 'TỪ CHỐI'} yêu cầu này?`)) return;
+    if (!window.confirm(`Xác nhận ${action === 'paid' ? 'ĐÃ THANH TOÁN' : 'TỪ CHỐI'} yêu cầu này?`)) return;
 
     try {
-      // 1. Nếu reject logic có thể là hoàn tiền lại cho user
-      // Nhưng theo business logic thường chỉ cần update ticket status để user tự gửi lại, 
-      // Tuy nhiên nếu trước đó chưa trừ balance lúc tạo form, thì Reject chỉ đổi status.
-      // Do lúc tạo form mình CHƯA trừ balance để an toàn nếu Firebase hỏng, 
-      // ==> Nếu Approve (paid), bắt đầu Trừ Balance của User.
-      
       const userRef = doc(db, 'users', withdrawal.userId);
-      const userSnap = await getDoc(userRef);
-      
-      if (!userSnap.exists()) {
-         return alert("User không tồn tại!");
-      }
+      const withdrawalRef = doc(db, 'withdrawals', withdrawal.id);
 
-      if (action === 'paid') {
-         const userData = userSnap.data() as UserProfile;
-         if (userData.balance < withdrawal.amount) {
-            return alert(`Số dư User hiện tại (${userData.balance}đ) không đủ để thanh toán yêu cầu ${withdrawal.amount}đ! Vui lòng Reject.`);
-         }
-         
-         // Trừ tiền user
-         await updateDoc(userRef, {
-            balance: increment(-withdrawal.amount)
-         });
-      }
+      await runTransaction(db, async (transaction) => {
+        const withSnap = await transaction.get(withdrawalRef);
+        if (!withSnap.exists()) throw new Error("Yêu cầu không tồn tại!");
+        if (withSnap.data().status !== 'pending') throw new Error("Yêu cầu này đã được xử lý rồi!");
 
-      // 2. Đổi status ticket
-      await updateDoc(doc(db, 'withdrawals', withdrawal.id), {
-        status: action,
-        processedAt: new Date()
+        // 1. Update Status
+        transaction.update(withdrawalRef, {
+          status: action,
+          processedAt: new Date()
+        });
+
+        // 2. If Rejected, refund balance
+        if (action === 'rejected') {
+          transaction.update(userRef, {
+            balance: increment(withdrawal.amount)
+          });
+        }
       });
 
       alert(`Đã xử lý thành công! (${action})`);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Đã có lỗi xảy ra!');
+      alert('Đã có lỗi xảy ra: ' + err.message);
     }
   };
 
