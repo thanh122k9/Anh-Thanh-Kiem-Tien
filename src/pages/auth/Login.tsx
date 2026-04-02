@@ -27,12 +27,25 @@ export function Login() {
   };
 
   const handleGoogleLogin = async () => {
+    setError('');
+    setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       navigate('/dashboard');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Cửa sổ đăng nhập đã bị đóng.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('Đăng nhập Google chưa được bật trong Firebase Console.');
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError('Tên miền này chưa được cấp phép trong Firebase.');
+      } else {
+        setError('Lỗi đăng nhập Google: ' + (err.message || 'Không rõ nguyên nhân'));
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,13 +115,14 @@ export function Login() {
         </form>
 
         <div className="my-6 flex items-center gap-4 before:h-px before:flex-1 before:bg-white/10 after:h-px after:flex-1 after:bg-white/10">
-          <span className="text-xs text-white/40 uppercase tracking-widest">Hoặc</span>
+          <span className="text-xs text-white/40 uppercase tracking-widest">Hoặc đăng nhập với</span>
         </div>
 
         <button 
           onClick={handleGoogleLogin}
           type="button"
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 py-3 font-semibold text-white transition hover:bg-white/10"
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 py-3 font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -118,6 +132,7 @@ export function Login() {
           </svg>
           Google
         </button>
+
 
         <p className="mt-6 text-center text-sm text-white/60">
           Chưa có tài khoản? <Link to="/register" className="text-orange-500 hover:underline">Đăng ký ngay</Link>

@@ -114,9 +114,9 @@ export function TaskManagement() {
             <div>
               <label className="block text-xs text-white/50 mb-1">Độ Khó</label>
               <select value={formData.difficulty} onChange={e=>setFormData({...formData, difficulty: e.target.value as any})} className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-sm">
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
+                <option value="easy">Dễ</option>
+                <option value="medium">Trung bình</option>
+                <option value="hard">Khó</option>
               </select>
             </div>
             <div className="md:col-span-2">
@@ -148,7 +148,10 @@ export function TaskManagement() {
                <tr key={t.id} className="hover:bg-white/5 transition">
                   <td className="px-4 py-3 font-semibold">{t.providerName}</td>
                   <td className="px-4 py-3 text-orange-500 font-bold">+{t.rewardAmount}đ</td>
-                  <td className="px-4 py-3"><span className="uppercase text-[10px] font-bold tracking-widest bg-white/10 px-2 py-1 rounded-full">{t.difficulty}</span></td>
+                  <td className="px-4 py-3"><span className="uppercase text-[10px] font-bold tracking-widest bg-white/10 px-2 py-1 rounded-full">
+                    {t.difficulty === 'easy' ? 'Dễ' : t.difficulty === 'medium' ? 'Trung bình' : 'Khó'}
+                  </span></td>
+
                   <td className="px-4 py-3">
                      <button onClick={() => toggleStatus(t.id, t.status)} className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${t.status ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
                         {t.status ? <><Power className="h-3 w-3"/> ĐANG BẬT</> : <><PowerOff className="h-3 w-3"/> ĐÃ TẮT</>}

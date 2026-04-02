@@ -29,7 +29,7 @@ export function Navbar({ user, profile, onLogout }: NavbarProps) {
              <Link to="/withdraw" className="text-sm font-medium hover:text-orange-500 transition">Rút tiền</Link>
              <Link to="/history" className="text-sm font-medium hover:text-orange-500 transition">Lịch sử</Link>
              {profile.role === 'admin' || user.email === 'acc.xinh001@gmail.com' ? (
-               <Link to="/admin" className="text-sm font-medium text-orange-400 hover:text-orange-300 transition">Admin Panel</Link>
+               <Link to="/admin" className="text-sm font-medium text-orange-400 hover:text-orange-300 transition">Trang quản trị</Link>
              ) : null}
           </div>
         )}

@@ -20,7 +20,7 @@ export function UserManagement() {
   }, []);
 
   const adjustBalance = async (user: UserProfile) => {
-    const newBalStr = prompt(`Nhập số dư mới (VNĐ) cho user ${user.email}`, String(user.balance));
+    const newBalStr = prompt(`Nhập số dư mới (VNĐ) cho người dùng ${user.email}`, String(user.balance));
     if (newBalStr && !isNaN(Number(newBalStr))) {
       await updateDoc(doc(db, 'users', user.uid), {
         balance: Number(newBalStr)
@@ -30,7 +30,7 @@ export function UserManagement() {
   };
 
   const setRole = async (user: UserProfile, newRole: 'admin' | 'user') => {
-     if(window.confirm(`Đổi quyền của ${user.email} thành ${newRole}?`)) {
+     if(window.confirm(`Đổi quyền của ${user.email} thành ${newRole === 'admin' ? 'Quản trị' : 'Người dùng'}?`)) {
         await updateDoc(doc(db, 'users', user.uid), {
            role: newRole
         });
@@ -80,17 +80,18 @@ export function UserManagement() {
                     </td>
                     <td className="px-4 py-4">
                        <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-500' : 'bg-white/10 text-white/60'}`}>
-                          {u.role || 'user'}
+                          {u.role === 'admin' ? 'Quản trị' : 'Người dùng'}
                        </span>
-                       {(u as any).banned && <span className="ml-2 text-[10px] bg-red-500/20 text-red-500 px-2 py-1 rounded-full font-bold">BANNED</span>}
+                       {(u as any).banned && <span className="ml-2 text-[10px] bg-red-500/20 text-red-500 px-2 py-1 rounded-full font-bold">ĐÃ CẤM</span>}
                     </td>
                     <td className="px-4 py-4">
                        <div className="flex justify-end gap-2">
                           <button onClick={() => adjustBalance(u)} title="Sửa số dư" className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition"><BadgeDollarSign className="h-4 w-4"/></button>
-                          <button onClick={() => setRole(u, u.role === 'admin' ? 'user' : 'admin')} title="Phân quyền Admin/User" className="p-2 bg-purple-500/10 text-purple-500 rounded-lg hover:bg-purple-500 hover:text-white transition"><ShieldAlert className="h-4 w-4"/></button>
+                          <button onClick={() => setRole(u, u.role === 'admin' ? 'user' : 'admin')} title="Phân quyền Quản trị/Người dùng" className="p-2 bg-purple-500/10 text-purple-500 rounded-lg hover:bg-purple-500 hover:text-white transition"><ShieldAlert className="h-4 w-4"/></button>
                           <button onClick={() => banUser(u)} title="Khoá tài khoản" className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition"><Ban className="h-4 w-4"/></button>
                        </div>
                     </td>
+
                  </tr>
               ))}
               {users.length === 0 && !loading && <tr><td colSpan={4} className="px-4 py-8 text-center text-white/40">Không có Users.</td></tr>}
