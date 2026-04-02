@@ -20,7 +20,14 @@ export function Login() {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Sai tên đăng nhập hoặc mật khẩu');
+      console.error(err);
+      let msg = 'Sai tên đăng nhập hoặc mật khẩu. Vui lòng kiểm tra lại.';
+      if (err.code === 'auth/invalid-email') msg = 'Định dạng email không hợp lệ.';
+      else if (err.code === 'auth/user-disabled') msg = 'Tài khoản đã bị vô hiệu hóa.';
+      else if (err.code === 'auth/too-many-requests') msg = 'Yêu cầu quá nhanh. Vui lòng thử lại sau vài phút.';
+      else if (err.code === 'auth/invalid-credential') msg = 'Email hoặc mật khẩu không chính xác.';
+      
+      setError(msg);
     } finally {
       setLoading(false);
     }

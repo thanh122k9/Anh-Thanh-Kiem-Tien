@@ -16,12 +16,19 @@ export function ForgotPassword() {
     setError('');
     setSuccess(false);
     setLoading(true);
-    
+
     try {
       await sendPasswordResetEmail(auth, email);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Lỗi gửi email reset mật khẩu');
+      console.error(err);
+      let msg = 'Lỗi gửi email reset mật khẩu. Vui lòng thử lại.';
+      if (err.code === 'auth/user-not-found') msg = 'Email này chưa được đăng ký trong hệ thống.';
+      else if (err.code === 'auth/invalid-email') msg = 'Định dạng email không hợp lệ.';
+      else if (err.code === 'auth/too-many-requests') msg = 'Yêu cầu quá nhanh. Vui lòng thử lại sau vài phút.';
+      else if (err.code === 'auth/network-request-failed') msg = 'Lỗi kết nối mạng. Vui lòng kiểm tra lại.';
+      
+      setError(msg);
     } finally {
       setLoading(false);
     }
