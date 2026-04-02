@@ -25,6 +25,8 @@ export interface TaskLog {
   taskId: string;
   status: 'pending' | 'completed' | 'expired' | 'suspicious' | 'rejected';
   sessionToken: string;
+  ipAddress?: string;
+  userAgent?: string;
   createdAt: any;
   completedAt?: any;
   reason?: string;

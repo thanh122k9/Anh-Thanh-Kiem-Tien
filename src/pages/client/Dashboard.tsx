@@ -252,17 +252,18 @@ export function Dashboard() {
             <h2 className="text-3xl font-bold">Quy định chống gian lận</h2>
             <p className="mt-4 text-base md:text-lg text-white/60">
               Hệ thống giám sát bằng AI để phát hiện bot, auto click, và proxy. 
-              Mọi hành vi vượt link dưới 10 giây hoặc dùng công cụ cheat đều sẽ bị hệ thống đánh dấu <span className="font-bold text-red-400">Suspicious</span> và khóa tài khoản mà không báo trước!
+              Mọi hành vi sử dụng nhiều tài khoản trên một thiết bị/IP sẽ bị hệ thống tự động chặn và đánh dấu <span className="font-bold text-red-400">Suspicious</span>!
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span>Một IP chỉ làm 1 lần/ngày/nhiệm vụ</span>
+                <span>1 IP / 1 Thiết bị chỉ làm 1 lần/ngày/nhiệm vụ</span>
               </div>
               <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span>Không sử dụng Adblock/VPN</span>
+                <span>Tuyệt đối không sử dụng VPN/Proxy</span>
               </div>
+
             </div>
           </div>
           <div className="relative h-48 w-48 shrink-0 md:h-64 md:w-64">

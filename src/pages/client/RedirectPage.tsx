@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { Loader2, AlertCircle, ShieldAlert } from 'lucide-react';
 import { motion } from 'motion/react';
+import { TaskLog } from '../../types';
 
 export function RedirectPage() {
   const { taskId } = useParams<{ taskId: string }>();
@@ -20,7 +21,19 @@ export function RedirectPage() {
 
     const processRedirect = async () => {
       try {
-        // Fetch Task info
+        // 1. Fetch User IP
+        let userIp = 'unknown';
+        try {
+          const ipRes = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipRes.json();
+          userIp = ipData.ip;
+        } catch (ipErr) {
+          console.error("Không thể lấy IP:", ipErr);
+        }
+
+        const userAgent = navigator.userAgent;
+
+        // 2. Fetch Task info
         const taskRef = doc(db, 'tasks', taskId);
         const taskSnap = await getDoc(taskRef);
 
@@ -31,18 +44,40 @@ export function RedirectPage() {
 
         const taskData = taskSnap.data();
 
-        // Check if user already did it today to avoid spamming db with pending logs
-        // This is a simple client-side check. Backend will strictly verify it as well.
+        // 3. Anti-Cheat: Check if this IP has already been used by ANOTHER user for THIS task today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        // Generate Session Token
+        const antiCheatQuery = query(
+          collection(db, 'task_logs'),
+          where('taskId', '==', taskId),
+          where('ipAddress', '==', userIp),
+          where('createdAt', '>=', today),
+          limit(5) // Check a few to be sure
+        );
+
+        const antiCheatSnap = await getDocs(antiCheatQuery);
+        const isCheat = antiCheatSnap.docs.some(doc => {
+          const data = doc.data() as TaskLog;
+          return data.userId !== user.uid;
+        });
+
+        if (isCheat) {
+          setError('Hệ thống phát hiện bạn đang sử dụng nhiều tài khoản trên cùng thiết bị/mạng. Để đảm bảo công bằng, vui lòng không gian lận!');
+          return;
+        }
+
+        // 4. Generate Session Token
         const sessionToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-        // Save pending Log to DB
+        // 5. Save pending Log to DB with IP and Device Info
         await addDoc(collection(db, 'task_logs'), {
           userId: user.uid,
           taskId: taskId,
           sessionToken: sessionToken,
           status: 'pending',
+          ipAddress: userIp,
+          userAgent: userAgent,
           createdAt: serverTimestamp()
         });
 
