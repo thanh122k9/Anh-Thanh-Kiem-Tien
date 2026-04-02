@@ -26,6 +26,7 @@ export function ForgotPassword() {
       if (err.code === 'auth/user-not-found') msg = 'Email này chưa được đăng ký trong hệ thống.';
       else if (err.code === 'auth/invalid-email') msg = 'Định dạng email không hợp lệ.';
       else if (err.code === 'auth/too-many-requests') msg = 'Yêu cầu quá nhanh. Vui lòng thử lại sau vài phút.';
+      else if (err.code === 'auth/operation-not-allowed') msg = 'Tính năng Reset mật khẩu hiện đang bị TẮT trong Firebase Console.';
       else if (err.code === 'auth/network-request-failed') msg = 'Lỗi kết nối mạng. Vui lòng kiểm tra lại.';
       
       setError(msg);

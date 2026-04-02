@@ -27,7 +27,14 @@ export function Register() {
       // Auth listener in AuthContext will handle creating the user profile document in Firestore
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Đăng ký thất bại. Email có thể đã tồn tại.');
+      console.error(err);
+      let msg = 'Đăng ký thất bại. Vui lòng thử lại sau.';
+      if (err.code === 'auth/email-already-in-use') msg = 'Email này đã được sử dụng bởi một tài khoản khác.';
+      else if (err.code === 'auth/operation-not-allowed') msg = 'Tính năng Đăng ký Email hiện đang bị TẮT trong Firebase Console. Vui lòng liên hệ Admin hoặc bật nó lên.';
+      else if (err.code === 'auth/weak-password') msg = 'Mật khẩu quá yếu. Vui lòng nhập ít nhất 6 ký tự.';
+      else if (err.code === 'auth/invalid-email') msg = 'Định dạng email không hợp lệ.';
+      
+      setError(msg);
     } finally {
       setLoading(false);
     }
